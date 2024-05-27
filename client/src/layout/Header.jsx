@@ -1,8 +1,10 @@
-import React from 'react';
+import React, {useState} from 'react';
 import {Button, Input, Select, Space} from 'antd';
 import {NavLink, useLocation} from "react-router-dom";
-import {selectorIsLogin, toggleLoginStatus} from "../store/modules/global/index.js";
+import {selectorIsLogin} from "../store/modules/global/index.js";
 import {useDispatch, useSelector} from "react-redux";
+import HeaderAvatar from "./components/HeaderAvatar.jsx";
+import LoginModel from "./components/LoginModel.jsx";
 
 const {Search} = Input;
 
@@ -40,47 +42,63 @@ const navs = [
 ]
 
 const Header = props => {
-
-
+    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
     const {pathname} = useLocation()
-
     const isLogin = useSelector(selectorIsLogin);
     const dispatch = useDispatch()
+
+    const closeLoginModel = () => {
+        setIsLoginModalOpen(false);
+    }
+    const openLoginModel = () => {
+        setIsLoginModalOpen(true);
+    }
 
     const navigateClass = (path) => {
         if (pathname === path) return 'navigation navigation-active'
         return 'navigation'
     }
 
+    const handleToLogin = () => {
+        // dispatch(toggleLoginStatus())
+        console.log('wozhixingle')
+        setIsLoginModalOpen(true)
+    }
+
     return (
-        <div className="headerContainer">
-            <div className="logoContainer">
-                <div className="logo"></div>
-            </div>
-            <div className="navContainer">
+        <>
+            <div className="headerContainer">
+                <div className="logoContainer">
+                    <div className="logo"></div>
+                </div>
+                <div className="navContainer">
 
-                {
-                    navs.map(nav =>
-                        (<NavLink className={() => navigateClass(nav.path)} to={nav.path}
-                                  key={nav.id}>{nav.label}</NavLink>))
-                }
-                <a className="navigation" href="https://blog.aiox.dev" target="_blank">博客</a>
-            </div>
-            <div className="searchContainer">
-                <Space.Compact block>
-                    <Select defaultValue="issue" options={options} size="large"/>
-                    <Input placeholder="输入要搜索的内容" allowClear/>
-                    <Button type="primary" size='large'>搜索</Button>
-                    {/*<Search placeholder="输入要搜索的内容" enterButton="搜索" size="large"/>*/}
-                </Space.Compact>
-            </div>
-            <div className="loginBtnContainer">
-                {!isLogin && <Button type="primary" size='large'
-                                     onClick={() => dispatch(toggleLoginStatus())}>登录/注册</Button>}
-                {isLogin && '已经登录了'}
+                    {
+                        navs.map(nav =>
+                            (<NavLink className={() => navigateClass(nav.path)} to={nav.path}
+                                      key={nav.id}>{nav.label}</NavLink>))
+                    }
+                    <a className="navigation" href="https://blog.aiox.dev" target="_blank">博客</a>
+                </div>
+                <div className="searchContainer">
+                    <Space.Compact block>
+                        <Select defaultValue="issue" options={options} size="large"/>
+                        <Input placeholder="输入要搜索的内容" allowClear/>
+                        <Button type="primary" size='large'>搜索</Button>
+                        {/*<Search placeholder="输入要搜索的内容" enterButton="搜索" size="large"/>*/}
+                    </Space.Compact>
+                </div>
+                <div className="loginBtnContainer">
+                    {!isLogin && <Button type="primary" size='large'
+                                         onClick={handleToLogin}>登录/注册</Button>}
+                    {isLogin && <HeaderAvatar isLoginOpen={isLoginModalOpen} closeLoginModel={closeLoginModel}
+                    />}
 
+                </div>
             </div>
-        </div>
+            <LoginModel/>
+        </>
+
     );
 };
 
