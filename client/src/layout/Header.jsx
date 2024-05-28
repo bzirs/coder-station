@@ -63,6 +63,7 @@ const Header = props => {
         // dispatch(toggleLoginStatus())
         console.log('wozhixingle')
         setIsLoginModalOpen(true)
+
     }
 
     return (
@@ -91,12 +92,12 @@ const Header = props => {
                 <div className="loginBtnContainer">
                     {!isLogin && <Button type="primary" size='large'
                                          onClick={handleToLogin}>登录/注册</Button>}
-                    {isLogin && <HeaderAvatar isLoginOpen={isLoginModalOpen} closeLoginModel={closeLoginModel}
+                    {isLogin && <HeaderAvatar
                     />}
 
                 </div>
             </div>
-            <LoginModel/>
+            <LoginModel isLoginOpen={isLoginModalOpen} closeLoginModel={closeLoginModel}/>
         </>
 
     );
