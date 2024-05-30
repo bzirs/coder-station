@@ -22,6 +22,7 @@ const globalSlice = createSlice({
 })
 
 export const selectorIsLogin = state => state.global.isLogin
+export const selectorUserInfo = state => state.global.userInfo
 
 
 export const {setUserInfo, toggleLoginStatus} = globalSlice.actions;

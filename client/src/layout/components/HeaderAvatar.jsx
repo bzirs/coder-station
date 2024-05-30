@@ -2,10 +2,13 @@ import React from 'react';
 import {Avatar, List, Popover} from "antd";
 import {UserOutlined} from '@ant-design/icons';
 import {NavLink} from "react-router-dom";
+import {useSelector} from "react-redux";
+import {selectorUserInfo} from "../../store/modules/global/index.js";
 
 
 const HeaderAvatar = props => {
 
+    const userInfo = useSelector(selectorUserInfo)
 
     const dropdownData = [
         {
@@ -27,7 +30,7 @@ const HeaderAvatar = props => {
     )
     return (
         <Popover content={dropdownContent} placement="bottom">
-            <Avatar size="large" icon={<UserOutlined/>}/>
+            <Avatar size="large" src={userInfo?.avatar || <UserOutlined/>}/>
         </Popover>
 
     );
