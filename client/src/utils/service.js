@@ -1,6 +1,10 @@
 import axios from "axios";
 import {message} from "antd";
+import {createLocal} from "./cache/index.js";
+import {USER_TOKEN} from "./cache/constant.js";
 
+
+const tokenLocal = createLocal(USER_TOKEN)
 
 const service = axios.create({
     timeout: 5000,
@@ -9,6 +13,10 @@ const service = axios.create({
 
 
 service.interceptors.request.use(config => {
+
+    const token = tokenLocal.get()
+    if (token) config.headers['Authorization'] = `Bearer ${token}`
+
     return config;
 }, error => {
     return Promise.reject(error);

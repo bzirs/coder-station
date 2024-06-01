@@ -3,66 +3,48 @@ import {Button, Checkbox, Col, Form, Input, message, Modal, Radio, Row} from "an
 import PropTypes from "prop-types";
 import styles from './loginModel.module.scss'
 import './loginModel.scss'
-import {getCaptchaImg, registerUser, userIsExist} from "../../api/user.js";
+import {getCaptchaImg, getUserInfoApi, loginUserApi, registerUser, userIsExist} from "../../api/user.js";
 import {useDispatch} from "react-redux";
 import {setUserInfo, toggleLoginStatus} from "../../store/modules/global/index.js";
+import {isNull} from "lodash";
+import {createLocal} from "../../utils/cache/index.js";
+import {USER_TOKEN} from "../../utils/cache/constant.js";
+
 
 const LoginModel = ({isLoginOpen, closeLoginModel}) => {
+
+    const tokenLocal = createLocal(USER_TOKEN)
 
     const dispatch = useDispatch()
 
     const [mode, setMode] = useState('login')
     const [captcha, setCaptcha] = useState(null)
 
-    const [loginInfo, setLoginInfo] = useState({
-        loginId: '',
-        loginPwd: '',
-        captcha: '',
-        remember: false
-    })
-    const [registerInfo, setRegisterInfo] = useState({
-        loginId: '',
-        nickname: '',
-        captcha: '',
-    })
-
-    const [loginFormRef] = Form.useForm()
-    const [registerFormRef] = Form.useForm()
+    const [form] = Form.useForm()
 
 
     useEffect(() => {
-        captchaClickHandle().then()
+        isLoginOpen && captchaClickHandle().then()
+
     }, [isLoginOpen]);
 
 
     const handleCloseLoginModal = () => {
-        registerFormRef.resetFields()
-        setRegisterInfo({
-            loginId: '',
-            nickname: '',
-            captcha: ''
-        })
-        setLoginInfo({
-            loginId: '',
-            loginPwd: '',
-            captcha: '',
-            remember: false
-        })
+        // 获取当前正在使用的form表单实例
+        // const form = Form.useFormInstance()
+        form.resetFields()
     }
 
-
     const registerHandle = async (value) => {
-        console.log('开始注册')
+        console.log('开始注册', value)
 
         try {
-            const {data} = await registerUser(registerInfo)
+            const {data} = await registerUser(value)
 
             message.success('注册成功, 默认密码为 123456')
 
             dispatch(setUserInfo(data))
-            dispatch(toggleLoginStatus())
-
-            handleCloseLoginModal()
+            dispatch(toggleLoginStatus(true))
             closeLoginModel()
 
         } catch (e) {
@@ -84,22 +66,19 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
     const captchaClickHandle = async () => {
         const result = await getCaptchaImg()
         setCaptcha(result)
+        form.resetFields(['captcha'])
+
     }
 
-    const updateInfo = (obj, value, key, setFunc) => {
-        const data = {...obj}
-        Reflect.set(data, key, value)
-        setFunc(data)
-    }
 
     // 默认注册的form jsx
     let container = (
         <div className={styles.container}>
             <Form
-                name="basic2"
-                autoComplete="off"
-                form={registerFormRef}
+                name="form"
+                form={form}
                 onFinish={registerHandle}
+
             >
                 <Form.Item
                     label="登录账号"
@@ -117,8 +96,6 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                 >
                     <Input
                         placeholder="请输入账号"
-                        value={registerInfo.loginId}
-                        onChange={(e) => updateInfo(registerInfo, e.target.value, 'loginId', setRegisterInfo)}
                     />
                 </Form.Item>
 
@@ -128,13 +105,11 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                 >
                     <Input
                         placeholder="请输入昵称，不填写默认为新用户xxx"
-                        value={registerInfo.nickname}
-                        onChange={(e) => updateInfo(registerInfo, e.target.value, 'nickname', setRegisterInfo)}
                     />
                 </Form.Item>
 
                 <Form.Item
-                    name="registercaptcha"
+                    name="captcha"
                     label="验证码"
                     rules={[
                         {
@@ -147,8 +122,6 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                         <Col span={16}>
                             <Input
                                 placeholder="请输入验证码"
-                                value={registerInfo.captcha}
-                                onChange={(e) => updateInfo(registerInfo, e.target.value, 'captcha', setRegisterInfo)}
                             />
                         </Col>
                         <Col span={6}>
@@ -174,7 +147,7 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                     >
                         注册
                     </Button>
-                    <Button type="primary" htmlType="submit" onClick={handleCloseLoginModal}>
+                    <Button htmlType="button" onClick={handleCloseLoginModal}>
                         重置
                     </Button>
                 </Form.Item>
@@ -182,8 +155,46 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
         </div>
     )
 
-    const loginHandle = (e) => {
-        console.log(e, 'eeeee')
+    const loginHandle = async (formData) => {
+
+        try {
+
+            const {data: {data = null, token = ''}} = await loginUserApi(formData)
+            console.log(data, isNull(data))
+
+            if (isNull(data)) {
+                message.error('密码错误,请重新输入')
+                form.resetFields(['loginPwd'])
+                captchaClickHandle()
+                return
+            }
+
+
+            if (data.enabled && !data.enabled) {
+                message.error('该账号已被冻结,请联系管理员')
+                form.resetFields()
+                captchaClickHandle()
+
+                return
+            }
+
+
+            tokenLocal.set(token)
+
+            const {data: userInfo} = await getUserInfoApi(data._id)
+
+            message.success('登录成功')
+
+            dispatch(setUserInfo(userInfo))
+            dispatch(toggleLoginStatus(true))
+            closeLoginModel()
+
+
+        } catch (e) {
+            console.log(e)
+            captchaClickHandle()
+
+        }
     }
 
 
@@ -194,7 +205,7 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                     name="basic1"
                     autoComplete="off"
                     onFinish={loginHandle}
-                    form={loginFormRef}
+                    form={form}
                 >
                     <Form.Item
                         label="登录账号"
@@ -208,8 +219,6 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                     >
                         <Input
                             placeholder="请输入你的登录账号"
-                            value={loginInfo.loginId}
-                            onChange={(e) => updateInfo(loginInfo, e.target.value, 'loginId', setLoginInfo)}
                         />
                     </Form.Item>
 
@@ -225,14 +234,12 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                     >
                         <Input.Password
                             placeholder="请输入你的登录密码，新用户默认为123456"
-                            value={loginInfo.loginPwd}
-                            onChange={(e) => updateInfo(loginInfo, e.target.value, 'loginPwd', setLoginInfo)}
                         />
                     </Form.Item>
 
                     {/* 验证码 */}
                     <Form.Item
-                        name="logincaptcha"
+                        name="captcha"
                         label="验证码"
                         rules={[
                             {
@@ -245,8 +252,6 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                             <Col span={16}>
                                 <Input
                                     placeholder="请输入验证码"
-                                    value={loginInfo.captcha}
-                                    onChange={(e) => updateInfo(loginInfo, e.target.value, 'captcha', setLoginInfo)}
                                 />
                             </Col>
                             <Col span={8}>
@@ -259,17 +264,16 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                         </Row>
                     </Form.Item>
 
-
+                    {/* checkbox等组件要设置valuePropName方式获取数据 */}
                     <Form.Item
                         name="remember"
+                        valuePropName="checked"
                         wrapperCol={{
                             offset: 5,
                             span: 16,
                         }}
                     >
                         <Checkbox
-                            onChange={(e) => updateInfo(loginInfo, e.target.checked, 'remember', setLoginInfo)}
-                            checked={loginInfo.remember}
                         >记住我</Checkbox>
                     </Form.Item>
 
@@ -286,7 +290,7 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                         >
                             登录
                         </Button>
-                        <Button type="primary" htmlType="submit">
+                        <Button htmlType="button" onClick={handleCloseLoginModal}>
                             重置
                         </Button>
                     </Form.Item>

@@ -10,8 +10,8 @@ const reducers = {
     setUserInfo: (state, {payload = {}}) => {
         state.userInfo = payload;
     },
-    toggleLoginStatus: (state) => {
-        state.isLogin = !state.isLogin;
+    toggleLoginStatus: (state, {payload}) => {
+        state.isLogin = payload;
     }
 }
 
