@@ -3,6 +3,7 @@ import Layout from "../layout/index.jsx";
 import Issue from "../views/issue/index.jsx";
 import Books from "../views/books/index.jsx";
 import Interviews from "../views/interviews/index.jsx";
+import AddIssue from "../views/issue/pages/add/index.jsx";
 
 const rootRoute = [
     {
@@ -24,6 +25,10 @@ const rootRoute = [
                 }
             },
             {
+                path: "/issue/add",
+                element: <AddIssue/>
+            },
+            {
                 path: "/books",
                 element: <Books/>,
                 meta: {
@@ -38,7 +43,8 @@ const rootRoute = [
                 }
             },
         ]
-    }
+    },
+
 ]
 
 const Router = () => useRoutes(rootRoute)

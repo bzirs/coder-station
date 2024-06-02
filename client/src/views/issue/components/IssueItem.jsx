@@ -1,13 +1,35 @@
-import React from 'react';
-
+import React, {useEffect, useState} from 'react';
 import styles from './IssueItem.module.scss'
 import PropTypes from "prop-types";
 import {formatDate} from "../../../utils/tools.js";
+import {Tag} from "antd";
+import {useSelector} from "react-redux";
+import {selectorTypes} from "../../../store/modules/type/index.js";
+import {getUserInfoApi} from "../../../api/user.js";
 
 const colorArr = ["#108ee9", "#2db7f5", "#f50", "green", "#87d068", "blue", "red", "purple"]
 
 
 const IssueItem = props => {
+    const {issueInfo} = props
+
+    const tags = useSelector(selectorTypes)
+    const [userInfo, setUserInfo] = useState({})
+
+
+    const type = tags.find(tag => tag._id === issueInfo.typeId);
+
+    useEffect(() => {
+
+
+        const fetchUserInfo = async () => {
+            // 查询对应用户信息
+            const {data} = await getUserInfoApi(issueInfo.userId)
+            setUserInfo(data)
+        }
+
+        fetchUserInfo()
+    }, [])
 
     return (
         <div className={styles.container}>
@@ -26,10 +48,11 @@ const IssueItem = props => {
                 <div className={styles.top}>{props.issueInfo.issueTitle}</div>
                 <div className={styles.bottom}>
                     <div className={styles.left}>
-                        {/*<Tag color={colorArr[typeList.indexOf(type) % colorArr.length]}>{type?.typeName}</Tag>*/}
+                        {/* 取余获取颜色列表中的下标 */}
+                        <Tag color={colorArr[tags.indexOf(type) % colorArr.length]}>{type?.typeName}</Tag>
                     </div>
                     <div className={styles.right}>
-                        {/*<Tag color="volcano">{userInfo.nickname}</Tag>*/}
+                        <Tag color="volcano">{userInfo.nickname}</Tag>
                         <span>{formatDate(props.issueInfo.issueDate, "year")}</span>
                     </div>
                 </div>

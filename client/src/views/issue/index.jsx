@@ -4,8 +4,25 @@ import IssueItem from "./components/IssueItem.jsx";
 import PageHeader from "../../components/PageHeader/index.jsx";
 import styles from "./index.module.scss";
 import {Pagination} from "antd";
+import {useDispatch, useSelector} from "react-redux";
+import {getTypes, selectorTypes} from "../../store/modules/type/index.js";
+import AddIssue from "./components/AddIssue.jsx";
+import Recommend from "./components/Recommend.jsx";
+import ScoreRank from "./components/ScoreRank.jsx";
 
 const Issue = props => {
+
+    const dispatch = useDispatch();
+    const tags = useSelector(selectorTypes)
+
+
+    useEffect(() => {
+
+        if (!tags.length) {
+            dispatch(getTypes())
+
+        }
+    }, [])
 
     const [issues, setIssues] = useState([]);
 
@@ -63,7 +80,11 @@ const Issue = props => {
                         total={params.total}
                         onChange={handleChange}/>
                 </div>
-                <div className={styles.rightSide}>右侧</div>
+                <div className={styles.rightSide}>
+                    <AddIssue/>
+                    <Recommend/>
+                    <ScoreRank/>
+                </div>
             </div>
 
         </div>
