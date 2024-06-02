@@ -35,17 +35,62 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
         form.resetFields()
     }
 
-    const registerHandle = async (value) => {
-        console.log('开始注册', value)
+    const loginHandle = async (formData) => {
 
         try {
-            const {data} = await registerUser(value)
+
+            const {data: {data = null, token = ''}} = await loginUserApi(formData)
+            console.log(data, isNull(data))
+
+            if (isNull(data)) {
+                message.error('密码错误,请重新输入')
+                form.resetFields(['loginPwd'])
+                captchaClickHandle()
+                return
+            }
+
+
+            if (data.enabled && !data.enabled) {
+                message.error('该账号已被冻结,请联系管理员')
+                form.resetFields()
+                captchaClickHandle()
+
+                return
+            }
+
+
+            tokenLocal.set(token)
+
+            const {data: userInfo} = await getUserInfoApi(data._id)
+
+            !formData.initialValue && message.success('登录成功')
+
+            dispatch(setUserInfo(userInfo))
+            dispatch(toggleLoginStatus(true))
+            closeLoginModel()
+
+
+        } catch (e) {
+            console.log(e)
+            captchaClickHandle()
+
+        }
+    }
+
+    const registerHandle = async (formData) => {
+        console.log('开始注册', formData)
+
+        try {
+            const {data} = await registerUser(formData)
 
             message.success('注册成功, 默认密码为 123456')
 
-            dispatch(setUserInfo(data))
-            dispatch(toggleLoginStatus(true))
-            closeLoginModel()
+            const loginData = {
+                ...formData,
+                loginPwd: '123456'
+            }
+
+            await loginHandle(loginData)
 
         } catch (e) {
             captchaClickHandle()
@@ -102,6 +147,7 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
                 <Form.Item
                     label="用户昵称"
                     name="nickname"
+                    initialValue={''}
                 >
                     <Input
                         placeholder="请输入昵称，不填写默认为新用户xxx"
@@ -154,48 +200,6 @@ const LoginModel = ({isLoginOpen, closeLoginModel}) => {
             </Form>
         </div>
     )
-
-    const loginHandle = async (formData) => {
-
-        try {
-
-            const {data: {data = null, token = ''}} = await loginUserApi(formData)
-            console.log(data, isNull(data))
-
-            if (isNull(data)) {
-                message.error('密码错误,请重新输入')
-                form.resetFields(['loginPwd'])
-                captchaClickHandle()
-                return
-            }
-
-
-            if (data.enabled && !data.enabled) {
-                message.error('该账号已被冻结,请联系管理员')
-                form.resetFields()
-                captchaClickHandle()
-
-                return
-            }
-
-
-            tokenLocal.set(token)
-
-            const {data: userInfo} = await getUserInfoApi(data._id)
-
-            message.success('登录成功')
-
-            dispatch(setUserInfo(userInfo))
-            dispatch(toggleLoginStatus(true))
-            closeLoginModel()
-
-
-        } catch (e) {
-            console.log(e)
-            captchaClickHandle()
-
-        }
-    }
 
 
     if (mode === 'login') {

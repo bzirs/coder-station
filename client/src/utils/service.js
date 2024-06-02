@@ -28,6 +28,8 @@ service.interceptors.response.use(result => {
 
     if (code && code !== 0) {
         message.error(msg).then()
+        tokenLocal.remove()
+
 
         return Promise.reject(msg)
     }

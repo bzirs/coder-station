@@ -1,3 +1,5 @@
+import {cloneDeep} from "lodash";
+
 /**
  * 格式化时间戳
  * @param {*} timestamp
@@ -77,4 +79,19 @@ export function formatDate(timestamp, part) {
     }
 
     return str;
+}
+
+
+/**
+ * 批量生成下拉列表的 option
+ */
+
+export function typeOptionCreator(typeList) {
+    const list = cloneDeep(typeList)
+
+    return list.map(type => ({
+        value: type._id,
+        label: type.typeName,
+    }))
+
 }

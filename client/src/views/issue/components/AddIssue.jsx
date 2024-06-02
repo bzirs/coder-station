@@ -2,16 +2,19 @@ import React from 'react';
 import {Button, message} from "antd";
 import {useSelector} from "react-redux";
 import {selectorIsLogin} from "../../../store/modules/global/index.js";
+import {useNavigate} from "react-router-dom";
 
 /**
  * 添加问答
  */
 function AddIssue(props) {
 
+    const navigate = useNavigate()
     const isLogin = useSelector(selectorIsLogin)
 
     function clickHandle() {
         if (isLogin) {
+            navigate('/issue/add')
             return
         }
 
