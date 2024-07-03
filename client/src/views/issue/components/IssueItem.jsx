@@ -6,6 +6,7 @@ import {Tag} from "antd";
 import {useSelector} from "react-redux";
 import {selectorTypes} from "../../../store/modules/type/index.js";
 import {getUserInfoApi} from "../../../api/user.js";
+import {useNavigate} from "react-router-dom";
 
 const colorArr = ["#108ee9", "#2db7f5", "#f50", "green", "#87d068", "blue", "red", "purple"]
 
@@ -15,6 +16,8 @@ const IssueItem = props => {
 
     const tags = useSelector(selectorTypes)
     const [userInfo, setUserInfo] = useState({})
+
+    const navigate = useNavigate()
 
 
     const type = tags.find(tag => tag._id === issueInfo.typeId);
@@ -45,7 +48,8 @@ const IssueItem = props => {
             </div>
             {/* 问题内容 */}
             <div className={styles.issueContainer}>
-                <div className={styles.top}>{props.issueInfo.issueTitle}</div>
+                <div className={styles.top}
+                     onClick={() => navigate(`/issue/${props.issueInfo._id}`)}>{props.issueInfo.issueTitle}</div>
                 <div className={styles.bottom}>
                     <div className={styles.left}>
                         {/* 取余获取颜色列表中的下标 */}

@@ -1,30 +1,21 @@
 import React, {useEffect, useState} from 'react';
 import {getIssueListApi} from "../../api/issue.js";
-import IssueItem from "./components/IssueItem.jsx";
 import PageHeader from "../../components/PageHeader/index.jsx";
 import styles from "./index.module.scss";
-import {Pagination} from "antd";
 import {useDispatch, useSelector} from "react-redux";
 import {getTypes, selectorTypes} from "../../store/modules/type/index.js";
-import AddIssue from "./components/AddIssue.jsx";
-import Recommend from "./components/Recommend.jsx";
-import ScoreRank from "./components/ScoreRank.jsx";
-import TypeSelect from "./components/TypeSelect.jsx";
+import Recommend from "../issue/components/Recommend.jsx";
+import ScoreRank from "../issue/components/ScoreRank.jsx";
+import ResultItem from "./components/ResultItem.jsx";
+import {useLocation} from "react-router-dom";
 
-const Issue = props => {
+const Search = props => {
 
     const dispatch = useDispatch();
-    
+
     const tags = useSelector(selectorTypes)
 
-
-    useEffect(() => {
-
-        if (!tags.length) {
-            dispatch(getTypes())
-
-        }
-    }, [])
+    const {state} = useLocation()
 
     const [issues, setIssues] = useState([]);
 
@@ -34,13 +25,17 @@ const Issue = props => {
         total: 0,
     })
 
-    const getDataList = async (typeId) => {
+    const getDataList = async () => {
 
         const paramsData = {
             current: params.current, pageSize: params.pageSize, issueStatus: true
         }
 
-        paramsData && (paramsData.typeId = typeId)
+
+        if (state.type === 'issue') {
+
+            Reflect.set(paramsData, 'issueTitle', state.issueTitle)
+        }
 
         try {
             const {data} = await getIssueListApi(paramsData)
@@ -57,38 +52,28 @@ const Issue = props => {
     }
 
     useEffect(() => {
-        console.log('zhixing')
-        getDataList()
-    }, [params.current, params.pageSize])
+        if (!tags.length) {
+            dispatch(getTypes())
+
+        }
+
+        if (state) {
+            getDataList()
+        }
+    }, [state])
 
 
-    const handleChange = (page, pageSize) => {
-
-        setParams({
-            ...params,
-            current: page,
-            pageSize: pageSize,
-        })
-    }
-
-    const issuesJSX = issues.map(issue => (<IssueItem issueInfo={issue} key={issue._id}/>))
+    const issuesJSX = issues.map(issue => (<ResultItem info={issue} key={issue._id}/>))
 
     return (
         <div className={styles.container}>
-            <PageHeader title="问答列表">
-                <TypeSelect getTypeDataFunc={getDataList}/>
+            <PageHeader title="搜索结果">
             </PageHeader>
             <div className={styles.issueContainer}>
                 <div className={styles.leftSide}>
                     {issuesJSX}
-                    {!!issuesJSX.length && <Pagination
-                        current={params.current}
-                        showTotal={(total) => `共 ${total} 条`} showSizeChanger
-                        total={params.total}
-                        onChange={handleChange}/>}
                 </div>
                 <div className={styles.rightSide}>
-                    <AddIssue/>
                     <Recommend/>
                     <ScoreRank/>
                 </div>
@@ -98,6 +83,6 @@ const Issue = props => {
     );
 };
 
-Issue.propTypes = {};
+Search.propTypes = {};
 
-export default Issue;
+export default Search;
